@@ -44,6 +44,7 @@ class StartScreen extends StatelessWidget {
                 Icons.movie_outlined,
                 size: 60,
                 color: Colors.deepPurple,
+                semanticLabel: '영화 아이콘',
               ),
               const SizedBox(height: 72),
               const Text(
@@ -55,6 +56,8 @@ class StartScreen extends StatelessWidget {
               const Text(
                 '보고 싶은 영화부터 나만의 평점까지\n한곳에서 관리해요',
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 14, color: Color(0xFF494551)),
               ),
               const Spacer(flex: 4),
