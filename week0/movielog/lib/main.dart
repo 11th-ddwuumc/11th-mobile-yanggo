@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'theme/app_theme.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   runApp(const MovieLogApp());
@@ -12,8 +16,8 @@ class MovieLogApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'MovieLog',
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.deepPurple),
-      home: const StartScreen(),
+      theme: AppTheme.light,
+      home: const ProfileScreen(),
     );
   }
 }
@@ -40,11 +44,11 @@ class StartScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
-              const Icon(
-                Icons.movie_outlined,
-                size: 60,
-                color: Colors.deepPurple,
-                semanticLabel: '영화 아이콘',
+              SvgPicture.asset(
+                'assets/logos/movielog_logo.svg',
+                width: 72,
+                height: 72,
+                semanticsLabel: 'MovieLog 로고',
               ),
               const SizedBox(height: 72),
               const Text(
