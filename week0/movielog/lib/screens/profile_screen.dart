@@ -17,7 +17,7 @@ class ProfileScreen extends StatelessWidget {
       appBar: const CommonAppBar(title: '내 프로필'),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 42, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -43,29 +43,32 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              Row(
-                children: [
-                  const Expanded(
-                    child: StatItem(label: '본 영화', value: '342'),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: StatItem(
-                      label: '평점',
-                      value: '4.2',
-                      icon: SvgPicture.asset(
-                        'assets/icons/star.svg',
-                        width: 16,
-                        height: 16,
-                        semanticsLabel: '평점 별 아이콘',
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: StatItem(label: '본 영화', value: '342'),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: StatItem(
+                        label: '평점',
+                        value: '4.2',
+                        icon: SvgPicture.asset(
+                          'assets/icons/star.svg',
+                          width: 16,
+                          height: 16,
+                          semanticsLabel: '평점 별 아이콘',
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: StatItem(label: '즐겨찾기', value: '58'),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: StatItem(label: '즐겨찾기', value: '58'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 32),
               Text(

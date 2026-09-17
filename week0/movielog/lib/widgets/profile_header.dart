@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -10,10 +9,12 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const CircleAvatar(
-          radius: 64,
-          backgroundImage: AssetImage(
+        ClipOval(
+          child: Image.asset(
             'assets/images/profile/profile_movielog.jpg',
+            width: 128,
+            height: 128,
+            fit: BoxFit.cover,
           ),
         ),
         const SizedBox(height: 16),

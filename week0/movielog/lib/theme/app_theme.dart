@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:movielog/theme/app_text_styles.dart';
 
 import 'app_colors.dart';
 
@@ -8,6 +9,16 @@ abstract final class AppTheme {
     useMaterial3: true,
     fontFamily: 'Manrope',
     scaffoldBackgroundColor: AppColors.warmWhite,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.violet,
+      surface: AppColors.warmWhite,
+    ),
+    textTheme: const TextTheme(
+      titleLarge: AppTextStyles.titleLarge,
+      titleMedium: AppTextStyles.titleMedium,
+      bodyMedium: AppTextStyles.bodyMedium,
+      bodySmall: AppTextStyles.bodySmall,
+    ),
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.warmWhite,
       foregroundColor: AppColors.black,
