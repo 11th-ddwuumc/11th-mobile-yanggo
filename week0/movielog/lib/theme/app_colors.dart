@@ -12,4 +12,11 @@ abstract final class AppColors {
   static const statBorder = Color(0xFFE9DDFF);
 
   static const deepViolet = Color(0xFF4F378A);
+
+  static const inputBorder = Color(0xFFCAC4D0);
+  static const error = Color(0xFFB3261E);
+  static const errorBackground = Color(0xFFFFDAD6);
+
+  static const hint = Color(0xFF7A7582);
+  static const secondaryText = Color(0xFF494551);
 }
