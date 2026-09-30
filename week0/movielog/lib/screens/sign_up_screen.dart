@@ -8,6 +8,8 @@ import '../widgets/common_app_bar.dart';
 import '../widgets/form_field_label.dart';
 import '../widgets/submit_button.dart';
 
+import 'package:go_router/go_router.dart';
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -56,6 +58,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
     FocusScope.of(context).unfocus();
+    context.go('/home');
   }
 
   InputDecoration _decoration(
