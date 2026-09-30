@@ -19,4 +19,7 @@ abstract final class AppColors {
 
   static const hint = Color(0xFF7A7582);
   static const secondaryText = Color(0xFF494551);
+
+  static const chipNeutral = Color(0xFFE3E2DF);
+  static const divider = Color(0xFFCBC4D2);
 }
