@@ -5,7 +5,9 @@ import '../theme/app_text_styles.dart';
 import 'movie_rating_input.dart';
 
 class RatingDialog extends StatefulWidget {
-  const RatingDialog({super.key});
+  const RatingDialog({super.key, required this.movieId});
+
+  final int movieId;
 
   @override
   State<RatingDialog> createState() => _RatingDialogState();

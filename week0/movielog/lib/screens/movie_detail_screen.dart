@@ -3,16 +3,18 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../models/mock_movie.dart';
+import '../data/models/tmdb_movie_dto.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/common_app_bar.dart';
 import '../widgets/rating_dialog.dart';
+import '../widgets/tmdb_poster_image.dart';
 
 class MovieDetailScreen extends StatefulWidget {
-  const MovieDetailScreen({super.key, required this.movieId});
+  const MovieDetailScreen({super.key, required this.movieId, this.movie});
 
   final int? movieId;
+  final TmdbMovieDto? movie;
 
   @override
   State<MovieDetailScreen> createState() => _MovieDetailScreenState();
@@ -22,10 +24,10 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   bool _isFavorite = false;
   double? _myRating;
 
-  Future<void> _openRatingDialog() async {
+  Future<void> _openRatingDialog(int movieId) async {
     final rating = await showDialog<double>(
       context: context,
-      builder: (context) => const RatingDialog(),
+      builder: (context) => RatingDialog(movieId: movieId),
     );
     if (rating == null) return;
     setState(() => _myRating = rating);
@@ -50,12 +52,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final movie = findMovieById(widget.movieId);
+    final movie = widget.movie;
 
-    if (movie == null) {
+    if (movie == null || movie.id != widget.movieId) {
       return Scaffold(
         appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
-        body: const Center(child: Text('영화를 찾을 수 없습니다')),
+        body: const Center(child: Text('영화 정보를 불러올 수 없어요')),
       );
     }
 
@@ -78,11 +80,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
             children: [
               AspectRatio(
                 aspectRatio: 3 / 4,
-                child: Image.asset(
-                  movie.posterAsset,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
+                child: TmdbPosterImage(posterPath: movie.posterPath),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -91,15 +89,13 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   children: [
                     Text(movie.title, style: AppTextStyles.titleLarge),
                     const SizedBox(height: 4),
-                    Text(
-                      '${movie.year} · ${movie.genre}',
-                      style: AppTextStyles.bodySmall,
-                    ),
+                    if (movie.releaseYear != null)
+                      Text(movie.releaseYear!, style: AppTextStyles.bodySmall),
                     const SizedBox(height: 18),
                     Row(
                       children: [
                         RatingBarIndicator(
-                          rating: 4.5,
+                          rating: movie.voteAverage / 2,
                           itemCount: 5,
                           itemSize: 20,
                           itemBuilder: (context, index) =>
@@ -107,33 +103,12 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          '4.5',
+                          movie.voteAverage.toStringAsFixed(1),
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.violet,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Text('(1,245)', style: AppTextStyles.bodySmall),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final tag in movie.displayTags)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.chipNeutral,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(tag, style: AppTextStyles.bodySmall),
-                          ),
                       ],
                     ),
                     if (_myRating != null) ...[
@@ -154,11 +129,15 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       style: AppTextStyles.titleMedium.copyWith(fontSize: 22),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      '${movie.title}은(는) ${movie.genre} 장르의 작품으로, '
-                      'MovieLog에서 Mock 데이터로 제공하는 소개 문구입니다.',
-                      style: AppTextStyles.bodyMedium,
-                    ),
+                    if (movie.overview.isEmpty)
+                      const Center(
+                        child: Text(
+                          '줄거리 정보가 없어요.',
+                          style: AppTextStyles.bodySmall,
+                        ),
+                      )
+                    else
+                      Text(movie.overview, style: AppTextStyles.bodyMedium),
                     const SizedBox(height: 29),
                     const Divider(color: AppColors.divider, height: 1),
                     const SizedBox(height: 30),
@@ -186,7 +165,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: _openRatingDialog,
+                            onPressed: () => _openRatingDialog(movie.id),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.violet,
                               foregroundColor: Colors.white,
