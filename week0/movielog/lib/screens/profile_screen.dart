@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:movielog/theme/app_text_styles.dart';
+import 'package:go_router/go_router.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import '../widgets/common_app_bar.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/stat_item.dart';
@@ -70,7 +71,37 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 26),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => context.push('/my/ratings'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.divider, width: 2),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '내가 등록한 평점',
+                        style: AppTextStyles.titleMedium.copyWith(fontSize: 16),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.violet,
+                        size: 28,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 26),
               Text(
                 '선호하는 장르',
                 style: AppTextStyles.titleMedium.copyWith(fontSize: 16),
