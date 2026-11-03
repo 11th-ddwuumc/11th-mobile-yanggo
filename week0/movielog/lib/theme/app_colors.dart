@@ -22,4 +22,7 @@ abstract final class AppColors {
 
   static const chipNeutral = Color(0xFFE3E2DF);
   static const divider = Color(0xFFCBC4D2);
+
+  static const success = Color(0xFF2E7D32);
+  static const info = Color(0xFF1565C0);
 }
