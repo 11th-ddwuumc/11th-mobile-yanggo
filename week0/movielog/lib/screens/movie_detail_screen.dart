@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../data/models/tmdb_movie_dto.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../view_models/movie_detail_view_model.dart';
+import '../view_models/sign_up_view_model.dart' show SubmitStatus;
 import '../widgets/common_app_bar.dart';
 import '../widgets/rating_dialog.dart';
 import '../widgets/tmdb_poster_image.dart';
@@ -22,19 +25,27 @@ class MovieDetailScreen extends StatefulWidget {
 
 class _MovieDetailScreenState extends State<MovieDetailScreen> {
   bool _isFavorite = false;
-  double? _myRating;
 
-  Future<void> _openRatingDialog(int movieId) async {
-    final rating = await showDialog<double>(
+  Future<void> _openRatingDialog() async {
+    final viewModel = context.read<MovieDetailViewModel>();
+
+    final saved = await showDialog<bool>(
       context: context,
-      builder: (context) => RatingDialog(movieId: movieId),
+      barrierDismissible: false,
+      builder: (_) => RatingDialog(
+        onSubmit: (score, comment) async {
+          await viewModel.createRating(score: score, comment: comment);
+          if (viewModel.submitStatus != SubmitStatus.success) {
+            throw StateError(viewModel.submitMessage ?? '저장에 실패했습니다.');
+          }
+        },
+      ),
     );
-    if (rating == null) return;
-    setState(() => _myRating = rating);
-    if (!mounted) return;
+
+    if (!mounted || saved != true) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('평점 ${rating.toStringAsFixed(1)}점을 저장했습니다.'),
+      const SnackBar(
+        content: Text('평점을 등록했습니다. 마이페이지의 "내가 등록한 평점"에서 확인할 수 있습니다.'),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -60,6 +71,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
         body: const Center(child: Text('영화 정보를 불러올 수 없어요')),
       );
     }
+
+    final viewModel = context.read<MovieDetailViewModel>();
 
     return Scaffold(
       backgroundColor: AppColors.warmWhite,
@@ -111,16 +124,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         ),
                       ],
                     ),
-                    if (_myRating != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        '내가 남긴 평점: ${_myRating!.toStringAsFixed(1)}점',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.violet,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 40),
                     const Divider(color: AppColors.divider, height: 1),
                     const SizedBox(height: 16),
@@ -165,7 +168,9 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _openRatingDialog(movie.id),
+                            onPressed: viewModel.memberId == null
+                                ? null
+                                : _openRatingDialog,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.violet,
                               foregroundColor: Colors.white,
@@ -188,6 +193,13 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         ),
                       ],
                     ),
+                    if (viewModel.memberId == null) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        '평점을 남기려면 학습용 회원가입이 필요합니다.',
+                        style: AppTextStyles.bodySmall,
+                      ),
+                    ],
                   ],
                 ),
               ),

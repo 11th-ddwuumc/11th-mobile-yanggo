@@ -17,6 +17,8 @@ import '../view_models/movie_list_view_model.dart';
 import '../view_models/my_ratings_view_model.dart';
 import '../view_models/sign_up_view_model.dart';
 import '../widgets/main_screen.dart';
+import '../view_models/learning_member_session.dart';
+import '../view_models/movie_detail_view_model.dart';
 
 class AppRouter {
   AppRouter._();
@@ -38,10 +40,20 @@ class AppRouter {
       GoRoute(
         path: '/movies/:movieId',
         builder: (context, state) {
+          final id = int.tryParse(state.pathParameters['movieId'] ?? '');
           final extra = state.extra;
-          return MovieDetailScreen(
-            movieId: int.tryParse(state.pathParameters['movieId'] ?? ''),
-            movie: extra is TmdbMovieDto ? extra : null,
+          final movie = extra is TmdbMovieDto && extra.id == id ? extra : null;
+
+          if (movie == null) {
+            return MovieDetailScreen(movieId: id);
+          }
+          return ChangeNotifierProvider<MovieDetailViewModel>(
+            create: (context) => MovieDetailViewModel(
+              context.read<MemberService>(),
+              context.read<LearningMemberSession>().memberId,
+              movie,
+            ),
+            child: MovieDetailScreen(movieId: id, movie: movie),
           );
         },
       ),
@@ -81,15 +93,28 @@ class AppRouter {
               GoRoute(
                 path: 'ratings',
                 parentNavigatorKey: rootNavigatorKey,
-                builder: (context, state) =>
-                    ChangeNotifierProvider<MyRatingsViewModel>(
-                      create: (context) => MyRatingsViewModel(
-                        context.read<MemberService>(),
-                        context.read<TmdbMovieService>(),
-                        sampleMemberId,
-                      )..load(),
-                      child: const MyRatingsScreen(),
-                    ),
+                builder: (context, state) {
+                  final memberId = context
+                      .read<LearningMemberSession>()
+                      .memberId;
+                  if (memberId == null) {
+                    return Scaffold(
+                      appBar: AppBar(
+                        centerTitle: true,
+                        title: const Text('내가 등록한 평점'),
+                      ),
+                      body: const Center(child: Text('학습용 회원가입이 필요합니다.')),
+                    );
+                  }
+                  return ChangeNotifierProvider<MyRatingsViewModel>(
+                    create: (context) => MyRatingsViewModel(
+                      context.read<MemberService>(),
+                      context.read<TmdbMovieService>(),
+                      memberId,
+                    )..load(),
+                    child: const MyRatingsScreen(),
+                  );
+                },
               ),
             ],
           ),

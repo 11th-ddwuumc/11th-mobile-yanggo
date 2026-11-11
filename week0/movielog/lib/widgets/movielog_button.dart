@@ -10,6 +10,7 @@ class MovieLogButton extends StatelessWidget {
     this.isLoading = false,
     this.width,
     this.height = 44,
+    this.radius = 12,
   });
 
   final String label;
@@ -17,6 +18,7 @@ class MovieLogButton extends StatelessWidget {
   final bool isLoading;
   final double? width;
   final double? height;
+  final double radius;
 
   bool get _disabled => isLoading || onPressed == null;
 
@@ -36,7 +38,7 @@ class MovieLogButton extends StatelessWidget {
           disabledForegroundColor: AppColors.white,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radius),
           ),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
