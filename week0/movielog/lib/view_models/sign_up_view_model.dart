@@ -2,8 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/member_service.dart';
+import '../data/models/create_member_request.dart';
 
 enum CheckStatus { idle, checking, available, duplicated, error }
+
+enum SubmitStatus { idle, submitting, success, error }
 
 class SignUpViewModel extends ChangeNotifier {
   SignUpViewModel(this._service);
@@ -23,6 +26,10 @@ class SignUpViewModel extends ChangeNotifier {
   int _emailRequestVersion = 0;
 
   bool _disposed = false;
+  SubmitStatus submitStatus = SubmitStatus.idle;
+  int? createdMemberId;
+  String? passwordErrorText;
+  String? snackbarMessage;
 
   bool get canCheckNickname =>
       nicknameCheckStatus != CheckStatus.checking &&
@@ -33,6 +40,7 @@ class SignUpViewModel extends ChangeNotifier {
       emailCheckStatus != CheckStatus.duplicated;
 
   bool get isSubmitBlocked =>
+      submitStatus == SubmitStatus.submitting ||
       nicknameCheckStatus == CheckStatus.checking ||
       nicknameCheckStatus == CheckStatus.duplicated ||
       emailCheckStatus == CheckStatus.checking ||
@@ -129,6 +137,44 @@ class SignUpViewModel extends ChangeNotifier {
       emailErrorText = '중복 확인에 실패했습니다. 다시 시도해 주세요.';
     }
 
+    notifyListeners();
+  }
+
+  void onPasswordChanged() {
+    if (passwordErrorText == null) return;
+    passwordErrorText = null;
+    notifyListeners();
+  }
+
+  Future<void> submit(CreateMemberRequest request) async {
+    if (submitStatus == SubmitStatus.submitting) return;
+
+    submitStatus = SubmitStatus.submitting;
+    createdMemberId = null;
+    passwordErrorText = null;
+    snackbarMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _service.signUp(request);
+      final id = response.result?.memberId;
+      if (id == null) throw StateError('회원가입 결과에 memberId가 없습니다.');
+      createdMemberId = id;
+      submitStatus = SubmitStatus.success;
+    } on DioException catch (error) {
+      submitStatus = SubmitStatus.error;
+      final message = writeSignUpErrorMessage(error);
+      if (error.response?.statusCode == 400 && message.contains('비밀번호')) {
+        passwordErrorText = message;
+      } else {
+        snackbarMessage = message;
+      }
+    } on StateError {
+      submitStatus = SubmitStatus.error;
+      snackbarMessage = '가입 결과를 확인하지 못했습니다. 새 요청 전에 서버 상태를 확인해 주세요.';
+    }
+
+    if (_disposed) return;
     notifyListeners();
   }
 

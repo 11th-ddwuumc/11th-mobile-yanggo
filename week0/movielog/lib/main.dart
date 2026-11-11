@@ -8,6 +8,7 @@ import 'data/services/member_service.dart';
 import 'data/services/tmdb_movie_service.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import 'view_models/learning_member_session.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,9 @@ class MovieLogApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<LearningMemberSession>(
+          create: (_) => LearningMemberSession(),
+        ),
         Provider<TmdbMovieService>(
           create: (_) => TmdbMovieService(createTmdbClient()),
         ),
