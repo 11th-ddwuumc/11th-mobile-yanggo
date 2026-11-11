@@ -6,8 +6,6 @@ import '../data/models/tmdb_movie_dto.dart';
 import '../data/services/member_service.dart';
 import '../data/services/tmdb_movie_service.dart';
 
-const int sampleMemberId = 1;
-
 enum MyRatingsLoadStatus { idle, loading, success, empty, error }
 
 class MyRatingsViewModel extends ChangeNotifier {
@@ -24,6 +22,7 @@ class MyRatingsViewModel extends ChangeNotifier {
   List<RatingWithMovie> ratings = const [];
   MyRatingsLoadStatus status = MyRatingsLoadStatus.idle;
   String? message;
+  String? refreshWarning;
 
   bool _isStale(int version) => _disposed || version != _requestVersion;
 
@@ -31,6 +30,7 @@ class MyRatingsViewModel extends ChangeNotifier {
     final version = ++_requestVersion;
     status = MyRatingsLoadStatus.loading;
     message = null;
+    refreshWarning = null;
     notifyListeners();
 
     try {
@@ -68,6 +68,46 @@ class MyRatingsViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> _refreshAfterWrite() async {
+    await load();
+    if (_disposed) return;
+    if (status == MyRatingsLoadStatus.error) {
+      refreshWarning = '저장은 완료됐지만 목록을 불러오지 못했습니다. 조회만 다시 시도해 주세요.';
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateRating({
+    required int ratingId,
+    required int score,
+    String? comment,
+  }) async {
+    try {
+      await _memberService.updateRating(
+        memberId: memberId,
+        ratingId: ratingId,
+        score: score,
+        comment: comment,
+      );
+    } on DioException catch (error) {
+      final errorMessage = writeErrorMessage(error);
+      if (shouldRefreshAfterRatingError(error)) await load();
+      throw StateError(errorMessage);
+    }
+    await _refreshAfterWrite();
+  }
+
+  Future<void> deleteRating(int ratingId) async {
+    try {
+      await _memberService.deleteRating(memberId: memberId, ratingId: ratingId);
+    } on DioException catch (error) {
+      final errorMessage = writeErrorMessage(error);
+      if (shouldRefreshAfterRatingError(error)) await load();
+      throw StateError(errorMessage);
+    }
+    await _refreshAfterWrite();
   }
 
   Future<void> _loadMovie(int movieId) async {
