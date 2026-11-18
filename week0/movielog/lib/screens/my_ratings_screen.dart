@@ -9,8 +9,6 @@ import '../theme/app_text_styles.dart';
 import '../view_models/my_ratings_view_model.dart';
 import '../widgets/common_app_bar.dart';
 import '../widgets/movie_list_empty.dart';
-import '../widgets/movie_list_error.dart';
-import '../widgets/movie_list_loading.dart';
 import '../widgets/movielog_button.dart';
 import '../widgets/rating_dialog.dart';
 import '../widgets/tmdb_poster_image.dart';
@@ -30,27 +28,12 @@ class MyRatingsScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<MyRatingsViewModel>(
           builder: (context, viewModel, _) {
-            return switch (viewModel.status) {
-              MyRatingsLoadStatus.idle ||
-              MyRatingsLoadStatus.loading => const MovieListLoading(),
-              MyRatingsLoadStatus.error => MovieListError(
-                title: viewModel.refreshWarning != null
-                    ? '저장은 완료됐어요'
-                    : '평점을 불러오지 못했어요',
-                message:
-                    viewModel.refreshWarning ??
-                    viewModel.message ??
-                    '잠시 후 다시 시도해 주세요.',
-                onRetry: () => context.read<MyRatingsViewModel>().load(),
-              ),
-              MyRatingsLoadStatus.empty => const MovieListEmpty(
-                message: '아직 등록한 평점이 없어요.',
-              ),
-              MyRatingsLoadStatus.success => _RatingList(
-                ratings: viewModel.ratings,
-                notice: viewModel.message,
-              ),
-            };
+            if (viewModel.ratings.isEmpty) {
+              return const MovieListEmpty(
+                message: '로그인한 뒤 등록한 평점이 아직 없어요.\n영화 상세에서 평점을 남겨 보세요.',
+              );
+            }
+            return _RatingList(ratings: viewModel.ratings);
           },
         ),
       ),
@@ -107,21 +90,22 @@ Future<void> _onDeletePressed(BuildContext context, RatingDto rating) async {
 }
 
 class _RatingList extends StatelessWidget {
-  const _RatingList({required this.ratings, this.notice});
+  const _RatingList({required this.ratings});
 
   final List<RatingWithMovie> ratings;
-  final String? notice;
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (notice != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(notice!, style: AppTextStyles.bodySmall),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: Text(
+            '로그인한 뒤 이 앱에서 등록한 평점만 표시돼요.',
+            style: AppTextStyles.bodySmall,
           ),
+        ),
         for (final entry in ratings) ...[
           _RatingCard(
             entry: entry,

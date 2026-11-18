@@ -72,8 +72,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       );
     }
 
-    final viewModel = context.read<MovieDetailViewModel>();
-
     return Scaffold(
       backgroundColor: AppColors.warmWhite,
       appBar: CommonAppBar(
@@ -168,9 +166,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: viewModel.memberId == null
-                                ? null
-                                : _openRatingDialog,
+                            onPressed: _openRatingDialog,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.violet,
                               foregroundColor: Colors.white,
@@ -193,13 +189,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         ),
                       ],
                     ),
-                    if (viewModel.memberId == null) ...[
-                      const SizedBox(height: 12),
-                      const Text(
-                        '평점을 남기려면 학습용 회원가입이 필요합니다.',
-                        style: AppTextStyles.bodySmall,
-                      ),
-                    ],
                   ],
                 ),
               ),
