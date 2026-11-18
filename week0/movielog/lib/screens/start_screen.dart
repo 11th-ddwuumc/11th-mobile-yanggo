@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
+
+import '../theme/app_colors.dart';
+import '../widgets/movielog_button.dart';
 
 class StartScreen extends StatelessWidget {
-  const StartScreen({super.key});
+  const StartScreen({super.key, this.message, this.onRetry});
+
+  final String? message;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +21,7 @@ class StartScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 64),
               const Text(
-                'FLUTTER 1주차',
+                'FLUTTER 8주차',
                 style: TextStyle(
                   fontSize: 11,
                   letterSpacing: 2,
@@ -45,25 +50,25 @@ class StartScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 14, color: Color(0xFF494551)),
               ),
               const Spacer(flex: 4),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => context.go('/register'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4F378A),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 56),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+              if (onRetry == null)
+                const CircularProgressIndicator(color: AppColors.violet)
+              else ...[
+                Text(
+                  message ?? '로그인 상태를 확인하지 못했어요.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF494551),
                   ),
-                  child: const Text('시작하기'),
                 ),
-              ),
+                const SizedBox(height: 12),
+                MovieLogButton(
+                  label: '다시 시도',
+                  width: double.infinity,
+                  height: 56,
+                  onPressed: onRetry,
+                ),
+              ],
               const SizedBox(height: 24),
             ],
           ),

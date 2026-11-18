@@ -11,7 +11,6 @@ import '../widgets/form_field_label.dart';
 import '../widgets/movielog_button.dart';
 import '../widgets/term_checkbox.dart';
 import '../data/models/create_member_request.dart';
-import '../view_models/learning_member_session.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -82,10 +81,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
     if (!mounted) return;
 
-    final memberId = viewModel.createdMemberId;
-    if (viewModel.submitStatus == SubmitStatus.success && memberId != null) {
-      context.read<LearningMemberSession>().setMemberId(memberId);
-      context.go('/home');
+    if (viewModel.submitStatus == SubmitStatus.success) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('가입이 완료됐어요. 로그인해 주세요.')));
+      context.go('/login');
       return;
     }
 
@@ -199,7 +198,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       canPop: viewModel.submitStatus != SubmitStatus.submitting,
       child: Scaffold(
         backgroundColor: AppColors.warmWhite,
-        appBar: CommonAppBar(title: '회원가입', centerTitle: true, onBack: () {}),
+        appBar: CommonAppBar(
+          title: '회원가입',
+          centerTitle: true,
+          onBack: () => context.go('/login'),
+        ),
         body: SafeArea(
           child: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -367,7 +370,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           color: AppColors.secondaryText,
                         ),
                       ),
-                      TextButton(onPressed: () {}, child: const Text('로그인')),
+                      TextButton(
+                        onPressed:
+                            viewModel.submitStatus == SubmitStatus.submitting
+                            ? null
+                            : () => context.go('/login'),
+                        child: const Text('로그인'),
+                      ),
                     ],
                   ),
                 ],
