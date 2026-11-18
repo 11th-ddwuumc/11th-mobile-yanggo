@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
 
+import '../data/models/member_info.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../view_models/auth_view_model.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  const ProfileHeader({
+    super.key,
+    required this.member,
+    required this.status,
+    required this.onRetry,
+  });
+
+  final MemberInfo? member;
+  final MemberLoadStatus status;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final info = member;
+
     return Column(
       children: [
         ClipOval(
@@ -18,15 +32,27 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text('무비러버', style: AppTextStyles.titleLarge.copyWith(fontSize: 22)),
-        const SizedBox(height: 8),
-        Text(
-          '매주 주말엔 영화관으로 출근하는 프로 관람객.\n좋은 영화를 보고 기록하는 것을 좋아합니다.',
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.bodyMedium,
-        ),
+        if (info != null) ...[
+          Text(
+            info.nickname,
+            style: AppTextStyles.titleLarge.copyWith(fontSize: 22),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            info.email,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.secondaryText,
+            ),
+          ),
+        ] else if (status == MemberLoadStatus.error) ...[
+          const Text('내 정보를 불러오지 못했어요.', style: AppTextStyles.bodySmall),
+          TextButton(onPressed: onRetry, child: const Text('다시 시도')),
+        ] else
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
       ],
     );
   }

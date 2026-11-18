@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../view_models/auth_view_model.dart';
 import '../widgets/common_app_bar.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/stat_item.dart';
@@ -13,20 +15,40 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthViewModel>();
+    final member = auth.member;
+
     return Scaffold(
       backgroundColor: AppColors.warmWhite,
-      appBar: const CommonAppBar(title: '내 프로필'),
+      appBar: CommonAppBar(
+        title: '내 프로필',
+        actions: [
+          TextButton(
+            onPressed: auth.storageCleanupInProgress
+                ? null
+                : () => context.read<AuthViewModel>().logout(),
+            child: const Text('로그아웃'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const ProfileHeader(),
+              ProfileHeader(
+                member: member,
+                status: auth.memberStatus,
+                onRetry: () =>
+                    context.read<AuthViewModel>().loadMember(force: true),
+              ),
               const SizedBox(height: 24),
               Center(
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: member == null
+                      ? null
+                      : () => context.push('/my/profile/edit'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.violet,
                     side: const BorderSide(color: AppColors.violet),
