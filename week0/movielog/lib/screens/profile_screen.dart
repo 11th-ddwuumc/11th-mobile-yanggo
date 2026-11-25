@@ -94,34 +94,16 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 26),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
+              _MenuRow(
+                label: '내가 등록한 평점',
                 onTap: () => context.push('/my/ratings'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.divider, width: 2),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '내가 등록한 평점',
-                        style: AppTextStyles.titleMedium.copyWith(fontSize: 16),
-                      ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.violet,
-                        size: 28,
-                      ),
-                    ],
-                  ),
-                ),
+              ),
+              const SizedBox(height: 12),
+              _MenuRow(
+                label: '내 즐겨찾기',
+                onTap: member == null
+                    ? null
+                    : () => context.push('/my/favorites'),
               ),
               const SizedBox(height: 26),
               Text(
@@ -152,6 +134,46 @@ class ProfileScreen extends StatelessWidget {
                     shape: const StadiumBorder(),
                   ),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: onTap == null ? 0.5 : 1,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.divider, width: 2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: AppTextStyles.titleMedium.copyWith(fontSize: 16),
+              ),
+              const Icon(
+                Icons.chevron_right,
+                color: AppColors.violet,
+                size: 28,
               ),
             ],
           ),
