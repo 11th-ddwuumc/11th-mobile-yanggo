@@ -20,11 +20,17 @@ import '../view_models/auth_view_model.dart';
 import '../view_models/edit_profile_view_model.dart';
 import '../view_models/movie_detail_view_model.dart';
 import '../view_models/movie_home_view_model.dart';
-import '../view_models/movie_list_view_model.dart';
+import '../view_models/paged_movies_view_model.dart';
 import '../view_models/my_ratings_view_model.dart';
 import '../view_models/sign_up_view_model.dart';
 import '../widgets/main_screen.dart';
 import '../widgets/movielog_button.dart';
+import '../core/session/session_guard.dart';
+import '../data/services/favorite_api_service.dart';
+import '../view_models/favorite_detail_view_model.dart';
+import '../screens/favorites_screen.dart';
+import '../view_models/favorites_view_model.dart';
+import '../screens/movie_search_screen.dart';
 
 String? authRedirect(AuthStatus status, String location) {
   const publicPaths = {'/login', '/register'};
@@ -81,6 +87,17 @@ class AppRouter {
           ),
         ),
         GoRoute(
+          path: '/movies/search',
+          builder: (context, state) =>
+              ChangeNotifierProvider<PagedMoviesViewModel>(
+                // 영화 목록과 별도의 인스턴스입니다.
+                create: (context) => PagedMoviesViewModel(
+                  tmdbApi: context.read<TmdbMovieService>(),
+                ),
+                child: const MovieSearchScreen(),
+              ),
+        ),
+        GoRoute(
           path: '/movies/:movieId',
           builder: (context, state) {
             final id = int.tryParse(state.pathParameters['movieId'] ?? '');
@@ -92,13 +109,40 @@ class AppRouter {
             if (movie == null) {
               return MovieDetailScreen(movieId: id);
             }
-            return ChangeNotifierProvider<MovieDetailViewModel>(
-              create: (context) => MovieDetailViewModel(
-                context.read<RatingApiService>(),
-                context.read<AuthViewModel>(),
-                context.read<MyRatingsViewModel>(),
-                movie,
-              ),
+
+            // 내 정보가 준비되고 현재 세션과 일치할 때까지 로딩을 보여 줍니다.
+            final member = context.watch<AuthViewModel>().member;
+            final guard = context.read<SessionGuard>();
+            if (member == null || guard.accountId != member.email) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            return MultiProvider(
+              // 계정이나 세션이 바뀌면 이전 ViewModel을 버리고 새로 만듭니다.
+              key: ValueKey('${member.email}:${guard.generation}'),
+              providers: [
+                ChangeNotifierProvider<MovieDetailViewModel>(
+                  create: (context) => MovieDetailViewModel(
+                    context.read<RatingApiService>(),
+                    context.read<AuthViewModel>(),
+                    context.read<MyRatingsViewModel>(),
+                    movie,
+                  ),
+                ),
+                ChangeNotifierProvider<FavoriteDetailViewModel>(
+                  create: (context) => FavoriteDetailViewModel(
+                    movieId: movie.id,
+                    favoriteApi: context.read<FavoriteApiService>(),
+                    sessionGuard: guard,
+                    accountId: member.email,
+                    onSessionExpired: context
+                        .read<AuthViewModel>()
+                        .expireSession,
+                  ),
+                ),
+              ],
               child: MovieDetailScreen(movieId: id, movie: movie),
             );
           },
@@ -125,9 +169,12 @@ class AppRouter {
             GoRoute(
               path: '/movies',
               builder: (context, state) =>
-                  ChangeNotifierProvider<MovieListViewModel>(
+                  ChangeNotifierProvider<PagedMoviesViewModel>(
                     create: (context) =>
-                        MovieListViewModel(context.read<TmdbMovieService>())
+                        PagedMoviesViewModel(
+                            tmdbApi: context.read<TmdbMovieService>(),
+                          )
+                          ..loadGenres()
                           ..loadInitial(),
                     child: const MovieListScreen(),
                   ),
@@ -168,6 +215,52 @@ class AppRouter {
                         auth,
                       ),
                       child: const EditProfileScreen(),
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'favorites',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (context, state) {
+                    final auth = context.watch<AuthViewModel>();
+                    final member = auth.member;
+                    final guard = context.read<SessionGuard>();
+
+                    if (member == null) {
+                      return Scaffold(
+                        appBar: AppBar(
+                          centerTitle: true,
+                          title: const Text('내 즐겨찾기'),
+                        ),
+                        body: Center(
+                          child: auth.memberStatus == MemberLoadStatus.error
+                              ? MovieLogButton(
+                                  label: '다시 시도',
+                                  onPressed: () => auth.loadMember(force: true),
+                                )
+                              : const CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    if (guard.accountId != member.email) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    return ChangeNotifierProvider<FavoritesViewModel>(
+                      // 계정이 바뀌면 이전 사용자의 목록을 버리고 새로 생성
+                      key: ValueKey('${member.email}:${guard.generation}'),
+                      create: (context) => FavoritesViewModel(
+                        favoriteApi: context.read<FavoriteApiService>(),
+                        tmdbApi: context.read<TmdbMovieService>(),
+                        sessionGuard: guard,
+                        accountId: member.email,
+                        onSessionExpired: context
+                            .read<AuthViewModel>()
+                            .expireSession,
+                      ),
+                      child: const FavoritesScreen(),
                     );
                   },
                 ),
