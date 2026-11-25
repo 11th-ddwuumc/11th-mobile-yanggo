@@ -7,9 +7,11 @@ import 'package:provider/provider.dart';
 import '../data/models/tmdb_movie_dto.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../view_models/favorite_detail_view_model.dart';
 import '../view_models/movie_detail_view_model.dart';
 import '../view_models/sign_up_view_model.dart' show SubmitStatus;
 import '../widgets/common_app_bar.dart';
+import '../widgets/favorite_button.dart';
 import '../widgets/rating_dialog.dart';
 import '../widgets/tmdb_poster_image.dart';
 
@@ -24,7 +26,15 @@ class MovieDetailScreen extends StatefulWidget {
 }
 
 class _MovieDetailScreenState extends State<MovieDetailScreen> {
-  bool _isFavorite = false;
+  @override
+  void initState() {
+    super.initState();
+    // 영화 정보가 없는 화면에는 ViewModel이 없으므로 조회하지 않습니다.
+    if (widget.movie == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<FavoriteDetailViewModel>().load();
+    });
+  }
 
   Future<void> _openRatingDialog() async {
     final viewModel = context.read<MovieDetailViewModel>();
@@ -46,16 +56,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('평점을 등록했습니다. 마이페이지의 "내가 등록한 평점"에서 확인할 수 있습니다.'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _toggleFavorite() {
-    setState(() => _isFavorite = !_isFavorite);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_isFavorite ? '즐겨찾기에 추가했습니다.' : '즐겨찾기에서 삭제했습니다.'),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -98,10 +98,30 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(movie.title, style: AppTextStyles.titleLarge),
-                    const SizedBox(height: 4),
-                    if (movie.releaseYear != null)
-                      Text(movie.releaseYear!, style: AppTextStyles.bodySmall),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                movie.title,
+                                style: AppTextStyles.titleLarge,
+                              ),
+                              const SizedBox(height: 4),
+                              if (movie.releaseYear != null)
+                                Text(
+                                  movie.releaseYear!,
+                                  style: AppTextStyles.bodySmall,
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const FavoriteButton(),
+                      ],
+                    ),
                     const SizedBox(height: 18),
                     Row(
                       children: [
@@ -142,52 +162,54 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                     const SizedBox(height: 29),
                     const Divider(color: AppColors.divider, height: 1),
                     const SizedBox(height: 30),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _toggleFavorite,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.violet,
-                              side: const BorderSide(color: AppColors.violet),
-                              minimumSize: const Size(double.infinity, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                            ),
-                            icon: Icon(
-                              _isFavorite
-                                  ? Icons.bookmark
-                                  : Icons.bookmark_border,
-                            ),
-                            label: const Text('즐겨찾기'),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _openRatingDialog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.violet,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _openRatingDialog,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.violet,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(double.infinity, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                            ),
-                            icon: SvgPicture.asset(
-                              'assets/icons/rate_button_icon.svg',
-                              width: 20,
-                              height: 20,
-                              colorFilter: const ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            label: const Text('평점 남기기'),
+                        icon: SvgPicture.asset(
+                          'assets/icons/rate_button_icon.svg',
+                          width: 20,
+                          height: 20,
+                          colorFilter: const ColorFilter.mode(
+                            Colors.white,
+                            BlendMode.srcIn,
                           ),
                         ),
-                      ],
+                        label: const Text('평점 남기기'),
+                      ),
+                    ),
+                    Consumer<FavoriteDetailViewModel>(
+                      builder: (context, favorite, _) {
+                        final message = favorite.errorMessage;
+                        if (message == null) return const SizedBox.shrink();
+                        return Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(top: 16),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorBackground.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            message,
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
