@@ -9,7 +9,7 @@ class AuthApiService {
   final Dio _dio;
 
   Future<LoginResult> login(LoginRequest request) async {
-    final response = await _dio.post('/v7/auth/login', data: request.toJson());
+    final response = await _dio.post('/v8/auth/login', data: request.toJson());
     final data = response.data;
     if (data is! Map<String, dynamic>) {
       throw StateError('로그인 응답 형식이 올바르지 않습니다.');

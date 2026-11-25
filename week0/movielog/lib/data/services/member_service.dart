@@ -12,14 +12,14 @@ class MemberService {
 
   Future<AvailabilityDto> checkNickname(String nickname) async {
     final response = await _dio.get(
-      '/v7/members/nickname/${Uri.encodeComponent(nickname)}',
+      '/v8/members/nickname/${Uri.encodeComponent(nickname)}',
     );
     return AvailabilityDto.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<AvailabilityDto> checkEmail(String email) async {
     final response = await _dio.get(
-      '/v7/members/email/${Uri.encodeComponent(email)}',
+      '/v8/members/email/${Uri.encodeComponent(email)}',
     );
     return AvailabilityDto.fromJson(response.data as Map<String, dynamic>);
   }
@@ -27,7 +27,7 @@ class MemberService {
   Future<CommonResponse<SignUpResult>> signUp(
     CreateMemberRequest request,
   ) async {
-    final response = await _dio.post('/v7/members', data: request.toJson());
+    final response = await _dio.post('/v8/members', data: request.toJson());
     return CommonResponse<SignUpResult>.fromJson(
       response.data as Map<String, dynamic>,
       (value) => SignUpResult.fromJson(value as Map<String, dynamic>),

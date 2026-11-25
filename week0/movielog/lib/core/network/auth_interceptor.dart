@@ -8,11 +8,22 @@ class AuthInterceptor extends Interceptor {
   final TokenStorage _storage;
 
   bool _isProtected(RequestOptions options) {
+    if (options.uri.host != 'workbook.devnoco.com') return false;
     final path = options.uri.path;
-    return options.uri.host == 'workbook.devnoco.com' &&
-        (path == '/v7/members/me' ||
-            path == '/v7/ratings' ||
-            path.startsWith('/v7/ratings/'));
+    final method = options.method.toUpperCase();
+
+    final authProtected =
+        path == '/v8/members/me' ||
+        path == '/v8/ratings' ||
+        path.startsWith('/v8/ratings/');
+
+    // 즐겨찾기: 등록(POST)·목록(GET) / 여부 조회(GET)·해제(DELETE)
+    final favorites =
+        (path == '/v8/favorites' && (method == 'GET' || method == 'POST')) ||
+        (RegExp(r'^/v8/favorites/[1-9]\d*$').hasMatch(path) &&
+            (method == 'GET' || method == 'DELETE'));
+
+    return authProtected || favorites;
   }
 
   @override

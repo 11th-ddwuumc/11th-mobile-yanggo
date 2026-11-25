@@ -8,13 +8,13 @@ class MemberApiService {
   final Dio _authDio;
 
   Future<MemberInfo> fetchMe() async {
-    final response = await _authDio.get('/v7/members/me');
+    final response = await _authDio.get('/v8/members/me');
     return parseMemberInfo(response.data);
   }
 
   Future<MemberInfo> updateNickname(String nickname) async {
     final response = await _authDio.patch(
-      '/v7/members/me',
+      '/v8/members/me',
       data: {'nickname': nickname},
     );
     return parseMemberInfo(response.data);
